@@ -5,7 +5,7 @@ from .compiler_error import compiler_error
 
 class Parser:
     def __init__(self, tokens: list[Token]):
-        assert len(OpType) == 8, "Update the parser to support new op types"
+        assert len(OpType) == 9, "Update the parser to support new op types"
         self.tokens = tokens
 
     def parse(self) -> list[Token]:

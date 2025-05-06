@@ -4,7 +4,7 @@ from .op_types import OpType
 
 class Compiler:
     def __init__(self, tokens: list[Token], file_name: str, memory: int = 640_000):
-        assert len(OpType) == 8, "Update the compiler to support new op types"
+        assert len(OpType) == 9, "Update the compiler to support new op types"
         self.tokens = tokens
         self.file_name = file_name
         self.memory = memory
@@ -99,6 +99,12 @@ class Compiler:
                     file.write(f"instruction_{i}:\n")
                     file.write(f"   ;; -- MEM --\n")
                     file.write("    push mem\n")
+                elif token.op_type == OpType.DUP:
+                    file.write(f"instruction_{i}:\n")
+                    file.write(f"   ;; -- DUP --\n")
+                    file.write("    pop rax\n")
+                    file.write("    push rax\n")
+                    file.write("    push rax\n")
             file.write(f"instruction_{len(self.tokens)}:\n")
             file.write("    ; -- Exit --\n")
             file.write("    mov rax, 60\n")

@@ -5,7 +5,7 @@ from .compiler_error import compiler_error
 
 class Simulation:
     def __init__(self, tokens: list[Token], memory: int = 640_000):
-        assert len(OpType) == 8, "Update the simulation to support new op types"
+        assert len(OpType) == 9, "Update the simulation to support new op types"
         self.tokens = tokens
         self.stack = []
         self.memory_size = memory
@@ -57,5 +57,10 @@ class Simulation:
                 self.stack.append(b % a)
             elif token.op_type == OpType.MEM:
                 self.stack.append(self.memory_pointer)
+            elif token.op_type == OpType.DUP:
+                if len(self.stack) < 1:
+                    compiler_error(token.str_pos(), "Simulation", f"Not enough operands for 'dup' operation at {token.pos}")
+                value = self.stack[-1]
+                self.stack.append(value)
             else:
                 raise RuntimeError(f"Unknown operation '{token.op_type}' at {token.pos}")

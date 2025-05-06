@@ -6,7 +6,7 @@ from .compiler_error import compiler_error
 
 class TypeChecker:
     def __init__(self, tokens: list[Token]):
-        assert len(OpType) == 8, "Update the type checker to support new op types"
+        assert len(OpType) == 9, "Update the type checker to support new op types"
         assert len(Types) == 2, "Update the type checker to support new types"
         self.tokens = tokens
         self.stack = []
@@ -88,6 +88,10 @@ class TypeChecker:
                 self.stack.pop()
                 self.stack.append(Types.INT)
             elif token.op_type == OpType.MEM:
-                self.stack.append(Types.INT)
+                self.stack.append(Types.PTR)
+            elif token.op_type == OpType.DUP:
+                if len(self.stack) < 1:
+                    compiler_error(token.str_pos(), "TypeChecker", f"Not enough operands for 'dup' operation at {token.pos}")
+                self.stack.append(self.stack[-1])
             else:
                 compiler_error(token.str_pos(), "TypeChecker", f"Unknown operation '{token.op_type}' at {token.pos}")
