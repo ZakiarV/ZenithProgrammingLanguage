@@ -11,3 +11,5 @@ class OpType(IntEnum):
     MOD = auto()
 
     DUMP = auto()
+
+    MEM = auto()

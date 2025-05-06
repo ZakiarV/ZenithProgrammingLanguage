@@ -6,7 +6,7 @@ from .compiler_error import compiler_error
 
 class Lexer:
     def __init__(self, file_name: str):
-        assert len(OpType) == 7, "Update the lexer to support new op types"
+        assert len(OpType) == 8, "Update the lexer to support new op types"
         assert file_name.endswith(".zenith"), "File must be a .zenith file"
         self.file_name = file_name
         self.tokens = []
@@ -17,6 +17,7 @@ class Lexer:
             "*": OpType.MUL,
             "/": OpType.DIV,
             "%": OpType.MOD,
+            "mem": OpType.MEM,
         }
         self.includes = set()
 

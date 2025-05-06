@@ -3,10 +3,11 @@ from .op_types import OpType
 
 
 class Compiler:
-    def __init__(self, tokens: list[Token], file_name: str):
-        assert len(OpType) == 7, "Update the compiler to support new op types"
+    def __init__(self, tokens: list[Token], file_name: str, memory: int = 640_000):
+        assert len(OpType) == 8, "Update the compiler to support new op types"
         self.tokens = tokens
         self.file_name = file_name
+        self.memory = memory
 
     def compile(self) -> None:
         with open(self.file_name, 'w') as file:
@@ -94,9 +95,15 @@ class Compiler:
                     file.write("    xor rdx, rdx\n")
                     file.write("    div rbx\n")
                     file.write("    push rdx\n")
+                elif token.op_type == OpType.MEM:
+                    file.write(f"instruction_{i}:\n")
+                    file.write(f"   ;; -- MEM --\n")
+                    file.write("    push mem\n")
             file.write(f"instruction_{len(self.tokens)}:\n")
             file.write("    ; -- Exit --\n")
             file.write("    mov rax, 60\n")
             file.write("    mov rdi, 0\n")
             file.write("    syscall\n")
+            file.write("section .bss\n")
+            file.write(f"    mem resb {self.memory}\n")
 
