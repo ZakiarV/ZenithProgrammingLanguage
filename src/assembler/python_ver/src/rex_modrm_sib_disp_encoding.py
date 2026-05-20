@@ -13,5 +13,5 @@ class RexModrmSibDispEncoding:
 
 
 
-def encode_memory_operand()-> RexModrmSibDispEncoding:
+def encode_memory_operand(extra_opcode_bits: int, operand1, operand2)-> RexModrmSibDispEncoding:
     pass
