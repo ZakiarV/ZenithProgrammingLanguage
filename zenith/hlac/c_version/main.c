@@ -352,6 +352,19 @@ ListString split_cstring(const char *s, char* delimiter) {
 }
 
 
+String copy_string(String s) {
+    char *data = (char *)sys_mmap(0, s.length + 1, (i64)(PROT_READ|PROT_WRITE), (i64)(MAP_PRIVATE|MAP_ANONYMOUS), -1, 0);
+    for (i64 i = 0; i < s.length; i++) {
+        data[i] = s.data[i];
+    }
+    data[s.length] = '\0';
+    String result;
+    result.data = data;
+    result.length = s.length;
+    return result;
+}
+
+
 ListString sanitize_list_string(ListString list) {
     i64 count = 0;
     for (i64 i = 0; i < list.count; i++) {
@@ -375,21 +388,8 @@ ListString sanitize_list_string(ListString list) {
 }
 
 
-String copy_string(String s) {
-    char *data = (char *)sys_mmap(0, s.length + 1, (i64)(PROT_READ|PROT_WRITE), (i64)(MAP_PRIVATE|MAP_ANONYMOUS), -1, 0);
-    for (i64 i = 0; i < s.length; i++) {
-        data[i] = s.data[i];
-    }
-    data[s.length] = '\0';
-    String result;
-    result.data = data;
-    result.length = s.length;
-    return result;
-}
-
-
 i64 main(i64 argc, char **argv) {
-    File file = read_file("test.txt");
+    File file = read_file(argv[1]);
 
     char *cstring = file_content_to_cstring(file);
 
