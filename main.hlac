@@ -1,0 +1,141 @@
+export _start ;
+
+
+DEFINITIONS ;
+    unsigned long st_dev;        // 8 bytes, offset 0
+    unsigned long st_ino;        // 8 bytes, offset 8
+    unsigned long st_nlink;      // 8 bytes, offset 16
+
+    unsigned int  st_mode;       // 4 bytes, offset 24
+    unsigned int  st_uid;        // 4 bytes, offset 28
+    unsigned int  st_gid;        // 4 bytes, offset 32
+    unsigned int  __pad0;        // 4 bytes, offset 36
+
+    unsigned long st_rdev;       // 8 bytes, offset 40
+
+    long          st_size;       // 8 bytes, offset 48
+    long          st_blksize;    // 8 bytes, offset 56
+    long          st_blocks;     // 8 bytes, offset 64
+
+    unsigned long st_atime;      // 8 bytes, offset 72
+    unsigned long st_atime_nsec; // 8 bytes, offset 80
+
+    unsigned long st_mtime;      // 8 bytes, offset 88
+    unsigned long st_mtime_nsec; // 8 bytes, offset 96
+
+    unsigned long st_ctime;      // 8 bytes, offset 104
+    unsigned long st_ctime_nsec; // 8 bytes, offset 112
+
+    long          __unused[3];   // 24 bytes, offset 120
+
+ENDDEFINITIONS ;
+
+
+TEXT ;
+
+    function linux_syscall ;
+        save_registers : 
+            rdi, rsi, rdx,
+            rcx, r8, r9,  
+            r10, r11 ;
+
+        mov rax, rdi  ;
+        mov rdi, rsi  ;
+        mov rsi, rdx  ;
+        mov rdx, rcx  ;
+        mov r10, r8   ;
+        mov r8, r9    ;
+        mov r9, [rbp] ;
+
+        syscall ;
+
+        restore_registers : 
+            r11, r10, r9,
+            r8, rcx, rdx,
+            rsi, rdi ;
+
+        return [ rax ] ;
+    end ;
+
+
+    function syscall_wrapper ;
+        call linux_syscall : narg 7 : args [ rdi, rsi, rdx, rcx, r8, r9, [rbp] ] ;
+
+        test rax, rax ;
+        js .failed_syscall ;
+        return [ rax ] ;
+
+    label .failed_syscall ;
+        and rax, 0xFF ;
+        call linux_syscall : narg 2 : args [ 60, rax ] ;
+        
+    end ;
+
+
+    function _start ;
+        locals ;
+            argc : size 8 : where stack ;
+            argv : size 8 : where stack ;
+        endlocals ;
+
+        mov rdi, [rsp+16] ;
+        lea rsi, [rsp+24] ;
+
+        mov QWORD [argc], rdi ;
+        mov QWORD [argv], rsi ;
+
+        call syscall_wrapper : narg 2 : args [ 60, 0 ]
+
+    end ;
+
+ENDTEXT ;
+
+
+DATA ;
+
+    SYSCALL_READ   : dq 0   ;
+    SYSCALL_WRITE  : dq 1   ;
+    SYSCALL_CLOSE  : dq 3   ;
+    SYSCALL_STAT   : dq 4   ;
+    SYSCALL_FSTAT  : dq 5   ;
+    SYSCALL_MMAP   : dq 9   ;
+    SYSCALL_MUNMAP : dq 11  ;
+    SYSCALL_EXIT   : dq 60  ;
+    SYSCALL_OPENAT : dq 257 ;
+
+    O_RDONLY    : dq 0      ;
+    O_WRONLY    : dq 1      ;
+    O_RDWR      : dq 2      ;
+    O_CREAT     : dq 64     ;
+    O_EXCL      : dq 128    ;
+    O_NOCTTY    : dq 256    ;
+    O_TRUNC     : dq 512    ;
+    O_APPEND    : dq 1024   ;
+    O_DIRECTORY : dq 65536  ;
+    O_NOFOLLOW  : dq 131072 ;
+    O_CLOEXEC   : dq 524288 ;
+
+    M_OTHER_EXEC  : dq 1    ;
+    M_OTHER_WRITE : dq 2    ;
+    M_OTHER_READ  : dq 4    ;
+    M_GROUP_EXEC  : dq 8    ;
+    M_GROUP_WRITE : dq 16   ;
+    M_GROUP_READ  : dq 32   ;
+    M_OWNER_EXEC  : dq 64   ;
+    M_OWNER_WRITE : dq 128  ;
+    M_OWNER_READ  : dq 256  ;
+    M_STICKY      : dq 512  ;
+    M_SETGID      : dq 1024 ;
+    M_SETUID      : dq 2048 ;
+
+    PROT_READ  : dq 1 ;
+    PROT_WRITE : dq 2 ;
+    PROT_EXEC  : dq 4 ;
+    PROT_NONE  : dq 0 ;
+
+    MAP_SHARED    : dq 1  ;
+    MAP_PRIVATE   : dq 2  ;
+    MAP_FIXED     : dq 16 ;
+    MAP_ANONYMOUS : dq 32 ;
+
+ENDDATA ;
