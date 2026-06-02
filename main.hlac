@@ -1,98 +1,36 @@
 export _start ;
 
 
-DEFINITIONS ;
-    unsigned long st_dev;        // 8 bytes, offset 0
-    unsigned long st_ino;        // 8 bytes, offset 8
-    unsigned long st_nlink;      // 8 bytes, offset 16
-
-    unsigned int  st_mode;       // 4 bytes, offset 24
-    unsigned int  st_uid;        // 4 bytes, offset 28
-    unsigned int  st_gid;        // 4 bytes, offset 32
-    unsigned int  __pad0;        // 4 bytes, offset 36
-
-    unsigned long st_rdev;       // 8 bytes, offset 40
-
-    long          st_size;       // 8 bytes, offset 48
-    long          st_blksize;    // 8 bytes, offset 56
-    long          st_blocks;     // 8 bytes, offset 64
-
-    unsigned long st_atime;      // 8 bytes, offset 72
-    unsigned long st_atime_nsec; // 8 bytes, offset 80
-
-    unsigned long st_mtime;      // 8 bytes, offset 88
-    unsigned long st_mtime_nsec; // 8 bytes, offset 96
-
-    unsigned long st_ctime;      // 8 bytes, offset 104
-    unsigned long st_ctime_nsec; // 8 bytes, offset 112
-
-    long          __unused[3];   // 24 bytes, offset 120
-
-ENDDEFINITIONS ;
+DEFINITION ;
+    sizeof_stat : 144
+ENDDEFINITION ;
 
 
-TEXT ;
-
-    function linux_syscall ;
-        save_registers : 
-            rdi, rsi, rdx,
-            rcx, r8, r9,  
-            r10, r11 ;
-
-        mov rax, rdi  ;
-        mov rdi, rsi  ;
-        mov rsi, rdx  ;
-        mov rdx, rcx  ;
-        mov r10, r8   ;
-        mov r8, r9    ;
-        mov r9, [rbp] ;
-
-        syscall ;
-
-        restore_registers : 
-            r11, r10, r9,
-            r8, rcx, rdx,
-            rsi, rdi ;
-
-        return [ rax ] ;
-    end ;
-
-
-    function syscall_wrapper ;
-        call linux_syscall : narg 7 : args [ rdi, rsi, rdx, rcx, r8, r9, [rbp] ] ;
-
-        test rax, rax ;
-        js .failed_syscall ;
-        return [ rax ] ;
-
-    label .failed_syscall ;
-        and rax, 0xFF ;
-        call linux_syscall : narg 2 : args [ 60, rax ] ;
-        
-    end ;
-
-
-    function _start ;
-        locals ;
-            argc : size 8 : where stack ;
-            argv : size 8 : where stack ;
-        endlocals ;
-
-        mov rdi, [rsp+16] ;
-        lea rsi, [rsp+24] ;
-
-        mov QWORD [argc], rdi ;
-        mov QWORD [argv], rsi ;
-
-        call syscall_wrapper : narg 2 : args [ 60, 0 ]
-
-    end ;
-
-ENDTEXT ;
+STRUCT_DEF ;
+    struct stat ;
+        field st_dev        : QWORD 1 ;
+        field st_ino        : QWORD 1 ;
+        field st_nlink      : QWORD 1 ;
+        field st_mode       : DWORD 1 ;
+        field st_uid        : DWORD 1 ;
+        field st_gid        : DWORD 1 ;
+        field __pad0        : DWORD 1 ;
+        field st_rdev       : QWORD 1 ;
+        field st_size       : QWORD 1 ;
+        field st_blksize    : QWORD 1 ;
+        field st_blocks     : QWORD 1 ;
+        field st_atime      : QWORD 1 ;
+        field st_atime_nsec : QWORD 1 ;
+        field st_mtime      : QWORD 1 ;
+        field t_mtime_nsec  : QWORD 1 ;
+        field st_ctime      : QWORD 1 ;
+        field st_ctime_nsec : QWORD 1 ;
+        field __unused      : QWORD 3 ;
+    endstruct ;
+ENDSTRUCT_DEF ;
 
 
 DATA ;
-
     SYSCALL_READ   : dq 0   ;
     SYSCALL_WRITE  : dq 1   ;
     SYSCALL_CLOSE  : dq 3   ;
@@ -137,5 +75,60 @@ DATA ;
     MAP_PRIVATE   : dq 2  ;
     MAP_FIXED     : dq 16 ;
     MAP_ANONYMOUS : dq 32 ;
-
 ENDDATA ;
+
+
+TEXT ;
+    function linux_syscall ;
+        save_registers : 
+            rdi, rsi, rdx,
+            rcx, r8, r9,  
+            r10, r11 ;
+
+        mov rax, rdi  ;
+        mov rdi, rsi  ;
+        mov rsi, rdx  ;
+        mov rdx, rcx  ;
+        mov r10, r8   ;
+        mov r8, r9    ;
+        mov r9, [rbp] ;
+
+        syscall ;
+
+        restore_registers : 
+            r11, r10, r9,
+            r8, rcx, rdx,
+            rsi, rdi ;
+
+        return [ rax ] ;
+    end ;
+
+
+    function syscall_wrapper ;
+        call linux_syscall : narg 7 : args [ rdi, rsi, rdx, rcx, r8, r9, [rbp] ] ;
+
+        test rax, rax ;
+        js .failed_syscall ;
+        return [ rax ] ;
+
+        label .failed_syscall ;
+        and rax, 0xFF ;
+        call linux_syscall : narg 2 : args [ 60, rax ] ;
+    end ;
+
+
+    function _start ;
+        locals ;
+            argc : size 8 : where stack ;
+            argv : size 8 : where stack ;
+        endlocals ;
+
+        mov rdi, [rsp+16] ;
+        lea rsi, [rsp+24] ;
+
+        mov QWORD [argc], rdi ;
+        mov QWORD [argv], rsi ;
+
+        call syscall_wrapper : narg 2 : args [ 60, 0 ]
+    end ;
+ENDTEXT ;

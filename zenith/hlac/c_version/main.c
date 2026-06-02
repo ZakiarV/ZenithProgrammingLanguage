@@ -286,6 +286,16 @@ bool string_equals(const char *s1, const char *s2) {
 }
 
 
+bool is_char_in_string(const char c, String string) {
+    for (i64 i = 0; i < string.length; i++) {
+        if (string.data[i] == c) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
 bool is_string_in_array(const char *s, char **array, i64 array_length) {
     for (i64 i = 0; i < array_length; i++) {
         if (string_equals(s, array[i])) {
@@ -463,12 +473,45 @@ i64 cstring_int(const char *s) {
 
 
 bool is_cstring_integer(const char *s) {
+    char *hexdigits = "0123456789abcdefABCDEF";
+    char *octdigits = "01234567";
+    String hex_digits = {
+        .data = hexdigits,
+        .length = get_strlen(hexdigits)
+    };
+    String oct_digits = {
+        .data = octdigits,
+        .length = get_strlen(octdigits)
+    };
+    
     if (get_strlen(s) == 0) {
         return false;
     }
-    for (i64 i = 0; s[i] != '\0'; i++) {
-        if (s[i] < '0' || s[i] > '9') {
-            return false; // Invalid character
+    if (get_strlen(s) >= 3) {
+        if (s[1]=='x'||s[1]=='X') {
+            for (i64 i = 2; s[i] != '\0'; i++) {
+                if (!is_char_in_string(s[i], hex_digits)) {
+                    return false;
+                }
+            }
+        } else if (s[1]=='o'||s[1]=='O'||s[1]=='q'||s[1]=='Q') {
+            for (i64 i = 2; s[i] != '\0'; i++) {
+                if (!is_char_in_string(s[i], oct_digits)) {
+                    return false;
+                }
+            }
+        } else {
+            for (i64 i = 0; s[i] != '\0'; i++) {
+                if (s[i] < '0' || s[i] > '9') {
+                    return false; // Invalid character
+                }
+            }
+        }
+    } else {
+        for (i64 i = 0; s[i] != '\0'; i++) {
+            if (s[i] < '0' || s[i] > '9') {
+                return false; // Invalid character
+            }
         }
     }
     return true;
@@ -580,6 +623,13 @@ typedef enum TokenType {
     TOKEN_DW,
     TOKEN_DD,
     TOKEN_DQ,
+    TOKEN_DEFINITION,
+    TOKEN_ENDDEFINITION,
+    TOKEN_STRUCT_DEF,
+    TOKEN_ENDSTRUCT_DEF,
+    TOKEN_STRUCT,
+    TOKEN_ENDSTRUCT,
+    TOKEN_FIELD,
      // ... (more token types can be added as needed)
 } TokenType;
 
@@ -646,6 +696,13 @@ void print_token(Token token) {
         case TOKEN_DW: type_str = "DW"; break;
         case TOKEN_DD: type_str = "DD"; break;
         case TOKEN_DQ: type_str = "DQ"; break;
+        case TOKEN_DEFINITION: type_str = "DEFINITION"; break;
+        case TOKEN_ENDDEFINITION: type_str = "ENDDEFINTION"; break;
+        case TOKEN_STRUCT_DEF: type_str = "STRUCT_DEF"; break;
+        case TOKEN_ENDSTRUCT_DEF: type_str = "ENDSTRUCT_DEF"; break;
+        case TOKEN_STRUCT: type_str = "STRUCT"; break;
+        case TOKEN_ENDSTRUCT: type_str = "ENDSTRUCT"; break;
+        case TOKEN_FIELD: type_str = "FIELD"; break;
         default: type_str = "UNKNOWN";
     }
     sys_write(1, "[", 1);
@@ -732,6 +789,20 @@ TokenList tokenize_file(File file) {
             token.type = TOKEN_DQ;
         } else if (strings.items[i].data[0] == '[' && strings.items[i].data[strings.items[i].length - 1] == ']') {
             token.type = TOKEN_MEMORY_OPERAND;
+        } else if (string_equals(strings.items[i].data, "DEFINITION")) {
+            token.type = TOKEN_DEFINITION;
+        } else if (string_equals(strings.items[i].data, "ENDDEFINITION")) {
+            token.type = TOKEN_ENDDEFINITION;
+        } else if (string_equals(strings.items[i].data, "STRUCT_DEF")) {
+            token.type = TOKEN_STRUCT_DEF;
+        } else if (string_equals(strings.items[i].data, "ENDSTRUCT_DEF")) {
+            token.type = TOKEN_ENDSTRUCT_DEF;
+        } else if (string_equals(strings.items[i].data, "struct")) {
+            token.type = TOKEN_STRUCT;
+        } else if (string_equals(strings.items[i].data, "endstruct")) {
+            token.type = TOKEN_ENDSTRUCT;
+        } else if (string_equals(strings.items[i].data, "field")) {
+            token.type = TOKEN_FIELD;
         } else {
             token.type = TOKEN_SYMBOL; // Default to symbol for now
         }
