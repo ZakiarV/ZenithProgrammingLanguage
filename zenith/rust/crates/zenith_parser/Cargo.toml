@@ -1,0 +1,10 @@
+[package]
+name = "zenith_parser"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+zenith_core = { path = "../zenith_core" }
+zenith_token = { path = "../zenith_token" }
+zenith_tokentypes = { path = "../zenith_tokentypes" }
+zenith_ast = { path = "../zenith_ast" }

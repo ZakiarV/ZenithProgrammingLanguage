@@ -1,0 +1,10 @@
+[workspace]
+resolver = "2"
+
+members = [
+    "bins/zenith", "crates/zenith_ast",
+    "crates/zenith_core", "crates/zenith_parser",
+    "crates/zenith_token",
+    "crates/zenith_tokenizer",
+    "crates/zenith_tokentypes",
+]

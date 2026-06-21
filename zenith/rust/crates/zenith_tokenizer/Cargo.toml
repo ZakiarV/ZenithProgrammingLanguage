@@ -1,0 +1,10 @@
+[package]
+name = "zenith_tokenizer"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+zenith_core = { path = "../zenith_core" }
+zenith_token = { path = "../zenith_token" }
+zenith_tokentypes = { path = "../zenith_tokentypes" }
+regex = "1.12.4"
