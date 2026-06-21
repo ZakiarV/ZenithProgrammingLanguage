@@ -34,7 +34,3 @@ impl Position {
         }
     }
 }
-
-fn temp_function() {
-    println!("This is a temporary function in zenith_core.");
-}
