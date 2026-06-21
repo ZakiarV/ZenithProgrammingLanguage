@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 
-members = [
+members = ["bin/zenith",
     "bins/zenith",
     "crates/zenith_ast",
     "crates/zenith_core",
